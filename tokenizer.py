@@ -3,6 +3,10 @@ import pandas as pd
 df = pd.read_csv("translate.csv")
 words_en = set()
 words_es = set()
+words_en.add("[PAD]")
+words_en.add("[UKN]")
+words_es.add("[PAD]")
+words_es.add("[UKN]")
 for line in df["En"]:
     for word in line.split(" "):
         words_en.add(word)
