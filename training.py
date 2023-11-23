@@ -4,8 +4,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 from arch import Model
+from tqdm import tqdm
 
-MAX_LENGHT = 20
+MAX_LENGHT = 6
 BATCH_SIZE = 100
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 LR = 0.0001
@@ -16,7 +17,7 @@ class Tokenizer():
     def __init__(self, txt_file, max_lenght):
         self.vocab = {}
         self.max_len = max_lenght
-        with open(txt_file, "r") as f:
+        with open(txt_file, "r", encoding="utf8") as f:
             for line in f:
                 word, id = line.split(" ")
                 self.vocab[word] = int(id.replace("\n", ""))
@@ -24,9 +25,12 @@ class Tokenizer():
     def get_max_vocab_size(self):
         return list(self.vocab.values())[-1]
 
-    def encode_text(self, text):
+    def encode_text(self, text, origin):
         text = text.translate(str.maketrans('', '', string.punctuation)).replace("¿", "").replace("¡", "").lower()
-        out = [self.vocab["[CLS]"]]
+        if origin:
+            out = [self.vocab["[CLS]"]]
+        else:
+            out = []
         for word in text.split(" "):
             try:
                 out.append(self.vocab[word])
@@ -42,7 +46,7 @@ class Tokenizer():
     def decode_text(self, data):
         out = ""
         for id in data:
-            if list(self.vocab.keys())[id] in [["[PAD]"], ["[SEP]"]]:
+            if list(self.vocab.keys())[id] == "[SEP]":
                 break
             out = out + " " + list(self.vocab.keys())[id]
         return out
@@ -64,8 +68,8 @@ class MyData(Dataset):
         en_word = self.en_data[index]
         es_word = self.es_data[index]
 
-        en_word = en_tokenizer.encode_text(en_word)
-        es_word = es_tokenizer.encode_text(es_word)
+        en_word = en_tokenizer.encode_text(en_word, True)
+        es_word = es_tokenizer.encode_text(es_word, False)
         if len(es_word) > 20:
             print(es_word)
 
@@ -93,7 +97,7 @@ def train(input, real):
     optimizer.zero_grad()
 
     out = model(input)
-    loss = loss_f(out, real)
+    loss = loss_f(out.transpose(1, 2), real)
 
     loss.backward()
     optimizer.step()
@@ -102,6 +106,8 @@ def train(input, real):
 
 for epoch in range(EPOCHS):
     epoch_loss = 0.0
-    for i, (en_text, es_text) in enumerate(train_set):
+    for i, (en_text, es_text) in tqdm(enumerate(train_set), total=len(train_set)):
         epoch_loss += train(en_text, es_text)
     print(f"Epoch: {epoch} ------ Loss: {epoch_loss.item()/i}")
+
+torch.save(model, "translator.pt")

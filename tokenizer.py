@@ -9,9 +9,8 @@ words_en.add("[SEP]")
 words_en.add("[CLS]")
 
 words_es.add("[PAD]")
-words_es.add("[UKN]")
 words_es.add("[SEP]")
-words_es.add("[CLS]")
+words_es.add("[UKN]")
 
 for line in df["En"]:
     for word in line.split(" "):
@@ -21,10 +20,10 @@ for line in df["Es"]:
         words_es.add(word)
 
 print(words_en)
-with open("en_vocab.txt", "a") as f:
+with open("en_vocab.txt", "a", encoding="utf8") as f:
     for i, w in enumerate(list(words_en)[1:]):
         f.write(w + " " + str(i) + "\n")
 
-with open("es_vocab.txt", "a") as f:
+with open("es_vocab.txt", "a", encoding="utf8") as f:
     for i, w in enumerate(list(words_es)[1:]):
         f.write(w + " " + str(i) + "\n")

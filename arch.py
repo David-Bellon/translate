@@ -39,8 +39,7 @@ class Model(nn.Module):
             nn.LayerNorm(2048),
             nn.GELU(),
             nn.Dropout(dropout_fc),
-            nn.Linear(2048, out_size),
-            nn.LayerNorm(out_size)
+            nn.Linear(2048, out_size)
         )
     def forward(self, x):
         x = self.embeds(x)
